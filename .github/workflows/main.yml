@@ -32,7 +32,7 @@ jobs:
           path: "vast_src"
       
       - name: Install CMake
-        run: bash vast_src/.devcontainer/reinstall_cmake.sh 3.23.3
+        run: sudo bash vast_src/.devcontainer/reinstall-cmake.sh 3.23.3
 
       - name: Build VAST Dialect docs
         run: cmake --build --preset ninja-rel --target vast-doc
