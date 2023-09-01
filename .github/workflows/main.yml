@@ -30,6 +30,9 @@ jobs:
           repository: trailofbits/vast
           ref: "master"
           path: "vast_src"
+      
+      - name: Install CMake
+        run: bash vast_src/.devcontainer/reinstall_cmake.sh 3.23.3
 
       - name: Build VAST Dialect docs
         run: cmake --build --preset ninja-rel --target vast-doc
