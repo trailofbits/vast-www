@@ -31,8 +31,10 @@ jobs:
           ref: "master"
           path: "vast_src"
       
-      - name: Install CMake
-        run: sudo bash vast_src/.devcontainer/reinstall-cmake.sh 3.23.3
+      - name: Get CMake
+        uses: lukka/get-cmake@latest
+        with:
+          cmakeVersion: 3.23.3
 
       - name: Build VAST Dialect docs
         run: cmake --build --preset ninja-rel --target vast-doc
