@@ -43,6 +43,9 @@ jobs:
       - name: Install VAST Source docs
         run: cp -rv vast_src/docs/ docs/
 
+      - name: Install MkDocs
+        run: pip3 install mkdocs
+      
       - name: Build Website
         run: mkdocs build
 
