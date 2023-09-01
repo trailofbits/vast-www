@@ -1,0 +1,5 @@
+site_name: "VAST: MLIR for Program Analysis"
+repo_url: https://github.com/trailofbits/vast
+nav:
+  - Home: README.md
+theme: readthedocs
