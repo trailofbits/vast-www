@@ -30,11 +30,20 @@ jobs:
           repository: trailofbits/vast
           ref: "master"
           path: "vast_src"
-      
+
+      - name: Install LLVM and Clang
+        uses: KyleMayes/install-llvm-action@v1
+        with:
+          version: "16.0"
+
       - name: Get CMake
         uses: lukka/get-cmake@latest
         with:
           cmakeVersion: 3.23.3
+
+      - name: Configure CMake
+        run: CC=clang-16 CXX=clang++-16 cmake --preset ninja-multi-default
+        working-directory: ./vast_src
 
       - name: Build VAST Dialect docs
         run: cmake --build --preset ninja-rel --target vast-doc
@@ -47,7 +56,7 @@ jobs:
 
       - name: Install MkDocs
         run: pip3 install mkdocs
-      
+
       - name: Build Website
         run: mkdocs build
 
