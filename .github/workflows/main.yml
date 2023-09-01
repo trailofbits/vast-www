@@ -32,9 +32,10 @@ jobs:
           path: "vast_src"
 
       - name: Install LLVM and Clang
-        uses: KyleMayes/install-llvm-action@v1
-        with:
-          version: "16.0"
+        run: |
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh 16
 
       - name: Get CMake
         uses: lukka/get-cmake@latest
