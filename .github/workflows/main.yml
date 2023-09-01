@@ -43,7 +43,10 @@ jobs:
           cmakeVersion: 3.23.3
 
       - name: Configure CMake
-        run: CC=clang-16 CXX=clang++-16 cmake --preset ninja-multi-default
+        run:
+          CC=clang-16 CXX=clang++-16 cmake --preset ninja-multi-default
+          --toolchain ./cmake/lld.toolchain.cmake
+          -DCMAKE_PREFIX_PATH=/usr/lib/llvm-16/
         working-directory: ./vast_src
 
       - name: Build VAST Dialect docs
