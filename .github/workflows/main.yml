@@ -1,0 +1,58 @@
+name: github pages
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    # Always regenerate once every 4 hour
+    - cron: "15 */4 * * *"
+  workflow_dispatch: {}
+
+jobs:
+  build-deploy:
+    # This ensures that the `GITHUB_TOKEN` set in this GitHub Action job
+    # has sufficient privileges to write to a secondary branch. On older
+    # repositories, the `GITHUB_TOKEN` used to have lots of privileges,
+    # but this needs to now be set explicitly. After setting this, people
+    # can just fork `vast-www` and having a working deploy to the
+    # `gh-pages` branch.
+    permissions:
+      contents: write
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Timestamp Begin
+        run: date
+
+      - name: Clone VAST repo
+        uses: actions/checkout@v3
+        with:
+          repository: trailofbits/vast
+          ref: "master"
+          path: "vast_src"
+
+      - name: Build VAST Dialect docs
+        run: cmake --build --preset ninja-rel --target vast-doc
+
+      - name: Install VAST Dialect docs
+        run: cp -rv vast_src/builds/ninja-multi-default/docs/ docs/dialects/
+
+      - name: Install VAST Source docs
+        run: cp -rv vast_src/docs/ docs/
+
+      - name: Build Website
+        run: mkdocs build
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        if: github.ref == 'refs/heads/main'
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ./public
+          force_orphan: true
+          user_name: "github-actions[bot]"
+          user_email: "github-actions[bot]@users.noreply.github.com"
+
+      - name: Timestamp End
+        run: date
