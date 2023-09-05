@@ -52,6 +52,7 @@ jobs:
 
       - name: Build VAST Dialect docs
         run: cmake --build --preset ninja-rel --target vast-doc
+        working-directory: ./vast_src
 
       - name: Install VAST Dialect docs
         run: cp -rv vast_src/builds/ninja-multi-default/docs/ docs/dialects/
