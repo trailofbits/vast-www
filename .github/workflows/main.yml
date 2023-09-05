@@ -55,7 +55,9 @@ jobs:
         working-directory: ./vast_src
 
       - name: Install VAST Dialect docs
-        run: cp -rv vast_src/builds/ninja-multi-default/docs/ docs/dialects/
+        run: |
+          mkdir -p docs/dialects/
+          cp -rv vast_src/builds/ninja-multi-default/docs/ docs/dialects/
 
       - name: Install VAST Source docs
         run: cp -rv vast_src/docs/ docs/
