@@ -72,7 +72,7 @@ jobs:
 
       - name: Build Website
         run: mkdocs build
-        working-dir: ./vast-www
+        working-directory: ./vast-www
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
