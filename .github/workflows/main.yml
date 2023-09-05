@@ -62,10 +62,10 @@ jobs:
           fetch-depth: 1
 
       - name: Install VAST Dialect docs
-        run: cp -rv vast/builds/ninja-multi-default/docs/ vast-www/docs/dialects/
+        run: cp -rv vast_src/builds/ninja-multi-default/docs/ vast-www/docs/dialects/
 
       - name: Install VAST Source docs
-        run: cp -rv vast/docs/ vast-www/docs/
+        run: cp -rv vast_src/docs/ vast-www/docs/
 
       - name: Install MkDocs
         run: pip3 install mkdocs
