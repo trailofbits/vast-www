@@ -54,19 +54,25 @@ jobs:
         run: cmake --build --preset ninja-rel --target vast-doc
         working-directory: ./vast_src
 
+      - name: Clone VAST WWW repo
+        uses: actions/checkout@v3
+        with:
+          repository: trailofbits/vast-www
+          ref: "main"
+          fetch-depth: 1
+
       - name: Install VAST Dialect docs
-        run: |
-          mkdir -p docs/dialects/
-          cp -rv vast_src/builds/ninja-multi-default/docs/ docs/dialects/
+        run: cp -rv vast/builds/ninja-multi-default/docs/ vast-www/docs/dialects/
 
       - name: Install VAST Source docs
-        run: cp -rv vast_src/docs/ docs/
+        run: cp -rv vast/docs/ vast-www/docs/
 
       - name: Install MkDocs
         run: pip3 install mkdocs
 
       - name: Build Website
         run: mkdocs build
+        working-dir: ./vast-www
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
