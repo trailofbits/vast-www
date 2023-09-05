@@ -31,11 +31,11 @@ jobs:
           ref: "master"
           path: "vast_src"
 
-      - name: Install LLVM and Clang
+      - name: Install LLVM, Clang, MLIR
         run: |
           wget https://apt.llvm.org/llvm.sh
           chmod +x llvm.sh
-          sudo ./llvm.sh 16 all && sudo apt-get install libmlir-16-dev
+          sudo ./llvm.sh 16 all && sudo apt-get install libmlir-16-dev mlir-16-tools
 
       - name: Get CMake
         uses: lukka/get-cmake@latest
@@ -43,8 +43,7 @@ jobs:
           cmakeVersion: 3.23.3
 
       - name: Configure CMake
-        run:
-          CC=clang-16 CXX=clang++-16 cmake --preset ninja-multi-default
+        run: CC=clang-16 CXX=clang++-16 cmake --preset ninja-multi-default
           --toolchain ./cmake/lld.toolchain.cmake
           -DCMAKE_PREFIX_PATH=/usr/lib/llvm-16/
         working-directory: ./vast_src
