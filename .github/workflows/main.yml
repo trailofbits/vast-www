@@ -29,6 +29,7 @@ jobs:
         with:
           repository: trailofbits/vast
           ref: "master"
+          submodules: true
           path: "vast_src"
 
       - name: Install LLVM, Clang, MLIR
