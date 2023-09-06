@@ -60,6 +60,7 @@ jobs:
           repository: trailofbits/vast-www
           ref: "main"
           fetch-depth: 1
+          path: ./vast-www
 
       - name: Install VAST Dialect docs
         run: cp -rv ./vast/builds/ninja-multi-default/docs/ ./vast-www/docs/dialects/
