@@ -5,7 +5,7 @@ nav:
   - Getting Started:
     - Build & Run: GettingStarted/build.md
     - How to contribute: CONTRIBUTING.md
-    - How to create a new dialect: GettingStarted/dialect.md
+    - How to create a new dialect: GettingStarted/extend.md
   - About:
     - 'License': 'license.md'
 
