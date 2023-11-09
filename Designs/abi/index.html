@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>Abi - VAST: MLIR for Program Analysis</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Abi";
+        var mkdocs_page_input_path = "Designs/abi.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> VAST: MLIR for Program Analysis
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Home</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">VAST: MLIR for Program Analysis</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">Abi</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/trailofbits/vast/edit/master/docs/Designs/abi.md" class="icon icon-github"> Edit on GitHub</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h2 id="abi">ABI</h2>
+<p>VAST partially models ABI specifications for function types and therefore
+callsites. While the specification goes into details regarding registers, for
+now VAST only offers lowering similar to what clang codegen does - argument and
+return types are coerced to types that will easily fit their respective
+registers once that allocation takes place. There is nothing preventing
+inclusion of information about registers as well (for example as metadata or
+separate operations/dialect), however it is not yet implemented.</p>
+<p>Similar to other transformation in VAST, ABI modelling tries to be as modular as
+possible and as such can be split into three distinct steps:</p>
+<ul>
+<li>Compute classification of types</li>
+<li>Encode computed classification into module</li>
+<li>Lower transformed module into some "executable" dialect</li>
+</ul>
+<p>Main goal for now is to lower function prototypes to match the types produced by
+clang, so that VAST emitted LLVM can be used as drop-in replacement for clang
+one.</p>
+<p>When reading this document please keep in mind that implementation of this
+feature is still ongoing and therefore particular technical details could change
+drastically (although we hope that overall design will remain the same).</p>
+<h2 id="classification">Classification</h2>
+<p>Mirrors what clang does, but instead of locking the computed information away,
+we expose the API. In ideal world we would like to keep the algorithm(s, as
+there may be multiple per different ABIs) generic. This can be achieved by
+requiring users to implement &amp; provide interface that specifies various details
+about used types; algorithm will be same when talking about <code>hl</code> or <code>LLVM</code> types
+after all.</p>
+<h2 id="abi-dialect">ABI Dialect</h2>
+<p>Once classification for a function is computed, we need to:</p>
+<ul>
+<li>Change function prototype</li>
+<li>Encode how new types match to the old types + some oddities such as <code>sret</code>.</li>
+</ul>
+<p>To facilitate this, VAST contains <code>abi</code> dialect, which operations encode
+"high-level" descriptions of type transformations that can occur during ABI
+lowering as operations. This is not very different from what clang does, but
+VAST does it over multiple steps.</p>
+<p>For functions, type change itself is easy and to mark that function is
+transformed, <code>abi.func</code> operation is used instead of original one to define the
+newly formed function. However, as arguments and return types are different, we
+introduce <code>abi.prologue</code> and <code>abi.epilogue</code> operations.</p>
+<p>Consider following function we want to lower:</p>
+<p>Disclaimer: Since <code>abi</code> dialect does not have nice formatting, therefore examples in
+this section contain some artistic liberty, but semantics (and operations) are
+preserved.</p>
+<pre><code>strut Point{ int; int; int; };
+
+int size( struct Point p ) { ... }
+</code></pre>
+<p>After running the classification, we discover that type of <code>size</code> should be
+<code>( i64, i32 ) -&gt; i32</code> - both arguments and
+returned value are passed directly. Therefore we encode it as follows:</p>
+<pre><code>abi.func size(i64 %arg0_0, i32 %arg0_1 ) -&gt; i32
+{
+    %arg = abi.prologue -&gt; hl.lvalue&lt; hl.struct&lt; &quot;Point&quot; &gt; &gt;
+    {
+        %0 = abi.direct %arg0_0, %arg0_1: (i64, i32) -&gt; hl.struct&lt; &quot;Point&quot; &gt;
+        abi.yield %0
+    }
+
+    // Computation can continue as before, because %arg has a correct type
+
+    %ret = ... value that was previously returned ... -&gt; i32
+    %out = abi.epilogue
+    {
+        %0 = abi.direct %ret: i32 -&gt; i32
+        abi.yield %0
+    }
+    hl.return %out
+}
+</code></pre>
+<p>In case, there were multiple function arguments, the <code>abi.prologue</code> would return
+more values.</p>
+<pre><code>
+%args = abi.prologue -&gt; (hl.lvalue&lt; hl.struct&lt; &quot;Point&quot; &gt; &gt;, i32 )
+{
+    %0 = abi.direct %arg0_0, %arg0_1
+    %1 = abi.direct %arg1
+    abi.yield %0, %1
+}
+</code></pre>
+<p>TODO: Add extra examples, at least <code>memory</code> and <code>sret</code>.</p>
+<p>This design allows easy analysis and subsequent rewrite (as each function has a
+prologue and epilogue and returned values are explicitly yielded).</p>
+<p>Callsites are transformed in the same manner (unfortunately, they look more
+complicated due to nested regions):</p>
+<pre><code>
+%x = hl.call&lt; &quot;size&quot; &gt; %arg: hl.struct&lt; &quot;Point&quot; &gt; -&gt; i32
+
+%x = abi.call&lt; &quot;size&quot; &gt;: () -&gt; i32
+{
+    %arg0_0, %arg0_1 = abi.call_args: () -&gt; (i64, i32)
+    {
+        %0, %1 = abi.direct %arg
+        abi.yield %0, %1
+    }
+    %x' = hl.call&lt; &quot;size&quot; &gt; %arg0_0, &amp;arg0_1 : (i64, i32) -&gt; i32
+    %0 = abi.call_rets : () -&gt; i32
+    {
+        %0 = abi.direct %x' : i32 -&gt; i32
+        abi.yield %0
+    }
+    abi.yield %0
+}
+
+</code></pre>
+<p>For now, same <code>abi</code> operations are used to encode transformation in callsite and
+function (although they change the value in a "opposite direction"), this may be
+later revisited, but for now it is enough to look at the parent operation to
+determine whether the transformation lies in a function or callsite.</p>
+<h2 id="lowering-to-some-executable-dialect">Lowering to some executable dialect</h2>
+<p>While <code>abi</code> dialect provides us with all the information required to do the
+transformation, it does not "compute" anything. Rather this lowering is left to
+a next pass. We hope by splitting the transformation into 2,
+we achieve the following:</p>
+<ul>
+<li>We can implement multiple "backends" - whether back to <code>hl</code>, <code>llvm</code> or totally
+  random dialect of user choice.</li>
+<li>Re-use existing implementation of classification algorithm.</li>
+</ul>
+              
+            </div>
+          </div><footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/trailofbits/vast" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+        </span>
+    
+    
+    
+  </span>
+</div>
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>
