@@ -6,6 +6,11 @@ nav:
     - Build & Run: GettingStarted/build.md
     - How to contribute: CONTRIBUTING.md
     - How to create a new dialect: GettingStarted/extend.md
+  - Dialects:
+    - High Level: dialects/HighLevel/HighLevel.md
+    - Low Level: dialects/LowLevel/LowLevel.md
+    - Core: dialects/Core/Core.md
+    - Meta: dialects/Meta/Meta.md
   - About:
     - 'License': 'license.md'
 
