@@ -37,7 +37,7 @@ jobs:
         run: |
           wget https://apt.llvm.org/llvm.sh
           chmod +x llvm.sh
-          sudo ./llvm.sh 16 all && sudo apt-get install libmlir-16-dev mlir-16-tools
+          sudo ./llvm.sh 17 all && sudo apt-get install libmlir-17-dev mlir-17-tools
 
       - name: Get CMake
         uses: lukka/get-cmake@latest
@@ -45,9 +45,9 @@ jobs:
           cmakeVersion: 3.23.3
 
       - name: Configure CMake
-        run: CC=clang-16 CXX=clang++-16 cmake --preset ninja-multi-default
+        run: CC=clang-17 CXX=clang++-17 cmake --preset ninja-multi-default
           --toolchain ./cmake/lld.toolchain.cmake
-          -DCMAKE_PREFIX_PATH=/usr/lib/llvm-16/
+          -DCMAKE_PREFIX_PATH=/usr/lib/llvm-17/
         working-directory: ./vast
 
       - name: Build VAST Dialect docs
