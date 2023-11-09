@@ -7,9 +7,8 @@ pages.
 To contribute, feel free to fork this repository and send a pull-request.
 
 The website is deployed on every push to this repository using a GitHub action
-defined in `.github/workflows/main.yml`. It also runs every 4 hours to catch
-updates from the VAST source repository (the LLVM monorepo), which is used for
-generating some docs.
+defined in `.github/workflows/main.yml`. It also runs every release of VAST,
+which is used for generating some docs.
 
 We are using the [MkDocs](https://www.mkdocs.org/) framework for generating the
 website.
