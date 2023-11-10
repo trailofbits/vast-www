@@ -11,6 +11,7 @@ nav:
     - Low Level: dialects/LowLevel/LowLevel.md
     - Core: dialects/Core/Core.md
     - Meta: dialects/Meta/Meta.md
+    - Unsupported: dialects/Unsupported/Unsupported.md
   - About:
     - 'License': 'license.md'
 
