@@ -1,7 +1,7 @@
 site_name: "VAST: MLIR for Program Analysis"
 repo_url: https://github.com/trailofbits/vast
 nav:
-  - About: about.md
+  - Home: about.md
   - Getting Started:
     - Build & Run: GettingStarted/build.md
     - How to contribute: CONTRIBUTING.md
